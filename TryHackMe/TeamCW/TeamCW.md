@@ -55,3 +55,5 @@ ffuf -u 'http://team.thm/scripts/FUZZ' -w Filenames_or_Directories_Common.wordli
 ```
 
 and everything was 403 for the most part (aka private) except for script.txt, reading script.txt, we find
+
+![Setting up /etc/hosts](./screenshots/7.png)
