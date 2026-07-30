@@ -31,6 +31,6 @@ if you're using the TryHackMe attack box, you can skip this section. Otherwise, 
 ### 1. Initial recon
 we start off by looking for directories inside of http://team.thm/, we do so by running the following command
 
-```
+```bash
 dirsearch -u http://team.thm/ -w Filenames_or_Directories_Common.wordlist -e php
 ```
