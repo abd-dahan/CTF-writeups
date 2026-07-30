@@ -29,8 +29,19 @@ if you're using the TryHackMe attack box, you can skip this section. Otherwise, 
 
 ## Process
 ### 1. Initial recon
+![Setting up /etc/hosts](./screenshots/3.png)
+
 we start off by looking for directories inside of http://team.thm/, we do so by running the following command
 
 ```bash
 dirsearch -u http://team.thm/ -w Filenames_or_Directories_Common.wordlist -e php
 ```
+
+You'll get the following directories
+
+![Setting up /etc/hosts](./screenshots/4.png)
+
+robots.txt has only "dale" in it, this is likely a username, so keep that name in mind
+
+![Setting up /etc/hosts](./screenshots/5.png)
+
