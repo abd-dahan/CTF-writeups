@@ -57,3 +57,17 @@ ffuf -u 'http://team.thm/scripts/FUZZ' -w Filenames_or_Directories_Common.wordli
 and everything was 403 for the most part (aka private) except for script.txt, reading script.txt, we find
 
 ![Setting up /etc/hosts](./screenshots/7.png)
+
+the comment hints us to look for script.old, which if we try accessing http://team.thm/scripts/script.old, we'll have the file downloaded, however it cannot be viewed until we rename it to script.txt, and what we get is an older version of the script.txt file, this time including credentials for an ftp account.
+
+### 3. Accessing FTP
+
+using the recently obtained credentials, run the following set of commands
+
+ftp
+open
+team.thm
+[username]
+[password]
+
+
