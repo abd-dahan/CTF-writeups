@@ -70,3 +70,17 @@ team.thm
 [username]
 [password]
 ```
+
+![Setting up /etc/hosts](./screenshots/9.png)
+
+running it will let us access the ftp, however you must keep in mind that the directory in which you're running that set of commands matters, as you'll sometimes not be able to use "get" on the files you want.
+
+### 4. Getting the file
+
+inside of the FTP account, navigate around using ls and cd, you'll eventually find New_site.txt, download New_site.txt by running:
+
+```bash
+get New_site.txt
+```
+
+![Setting up /etc/hosts](./screenshots/10.png)
