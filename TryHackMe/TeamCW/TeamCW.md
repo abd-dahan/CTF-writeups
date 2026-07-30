@@ -22,8 +22,15 @@ nano — editing the writable cron script
 Enumerate a web application, recover leaked credentials, pivot across two vhosts, and escalate from an unprivileged user to root.
 
 ## Set-up
-
 if you're using the TryHackMe attack box, you can skip this section. Otherwise, to actually interact with the machine you're going to need to install openVPN from https://tryhackme.com/access and follow the steps to enable the VPN, secondly, you'll need to get the IP of the Lab machine and put it in your /etc/hosts file like the following:
 
 ![Setting up /etc/hosts](./screenshots/1.png)
 ![Setting up /etc/hosts](./screenshots/2.png)
+
+## Process
+### 1. Initial recon
+we start off by looking for directories inside of http://team.thm/, we do so by running the following command
+
+```
+dirsearch -u http://team.thm/ -w Filenames_or_Directories_Common.wordlist -e php
+```
