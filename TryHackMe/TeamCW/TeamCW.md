@@ -93,4 +93,4 @@ we're hinted towards a subdomain, http://dev.team.thm/, which is what we'll be u
 
 but before that, make sure to add dev.team.thm into /etc/hosts, much like how we did earlier during setup
 ![Setting up /etc/hosts](./screenshots/12.png)
-<small>The IP is different from last time because this screenshot was taken at a separate day than the day of setup</small>
+<sub>The IP is different from last time because this screenshot was taken at a separate day than the day of setup.</sub>
