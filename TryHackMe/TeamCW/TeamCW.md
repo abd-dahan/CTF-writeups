@@ -29,7 +29,6 @@ if you're using the TryHackMe attack box, you can skip this section. Otherwise, 
 
 ## Process
 ### 1. Initial recon
-![Setting up /etc/hosts](./screenshots/3.png)
 
 we start off by looking for directories inside of http://team.thm/, we do so by running the following command
 
@@ -45,3 +44,14 @@ robots.txt has only "dale" in it, this is likely a username, so keep that name i
 
 ![Setting up /etc/hosts](./screenshots/5.png)
 
+### 2. Fuzzing the scripts directory
+
+the other directories (assets and images) aren't as significant as scripts, so we can focus on that
+
+i ran the command
+
+```bash
+ffuf -u 'http://team.thm/scripts/FUZZ' -w Filenames_or_Directories_Common.wordlist -e .bak,.txt,.zip -mc 200,403
+```
+
+and everything was 403 for the most part (aka private) except for script.txt, reading script.txt, we find
