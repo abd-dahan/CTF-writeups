@@ -25,4 +25,4 @@ Enumerate a web application, recover leaked credentials, pivot across two vhosts
 
 if you're using the TryHackMe attack box, you can skip this section. Otherwise, to actually interact with the machine you're going to need to install openVPN from https://tryhackme.com/access and follow the steps to enable the VPN, secondly, you'll need to get the IP of the Lab machine and put it in your /etc/hosts file like the following:
 
-CTF-writeups/TryHackMe/TeamCW/screenshots/1.png
+![Setting up /etc/hosts](./screenshots/1.png)
