@@ -63,11 +63,10 @@ the comment hints us to look for script.old, which if we try accessing http://te
 ### 3. Accessing FTP
 
 using the recently obtained credentials, run the following set of commands
-
+```bash
 ftp
 open
 team.thm
 [username]
 [password]
-
-
+```
