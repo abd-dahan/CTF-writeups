@@ -122,3 +122,12 @@ setup:
   <br>
   <em>The IP differs from the setup screenshot since this one was taken on a separate day.</em>
 </p>
+
+### dev subdomain
+
+Inside dev.team.thm, we find a placeholder link for a teamshare, and the url will be http://dev.team.thm/script.php?page=teamshare.php
+
+from the script.php?page=, we can find vital directories using another directory search after the '=', this time use a wordlist that is more relevant to LFI.
+
+doing so will let you find ../../../etc/ssh/sshd_config, to be more specific, http://dev.team.thm/script.php?page=../../../etc/ssh/sshd_config. This will have an ssh key.
+
