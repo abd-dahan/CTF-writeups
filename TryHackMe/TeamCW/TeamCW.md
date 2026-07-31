@@ -87,12 +87,10 @@ get New_site.txt
 
 printing the file will show us the following:
 
+
+but before that, make sure to add dev.team.thm into /etc/hosts, much like how we did earlier during setup.
 <p align="center">
   <img src="./screenshots/12.png" alt="Setting up /etc/hosts">
   <br>
   <em>The IP is different from last time because this screenshot was taken on a separate day than the day of setup.</em>
 </p>
-but before that, make sure to add dev.team.thm into /etc/hosts, much like how we did earlier during setup.
-
-![Setting up /etc/hosts](./screenshots/12.png)
-*Note: the IP differs from the setup screenshot since this one was taken on a separate day.*
