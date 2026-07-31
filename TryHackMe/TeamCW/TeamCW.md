@@ -55,7 +55,7 @@ This turns up the following directories:
 
 ![dirsearch results showing /images, /assets, /scripts, and robots.txt](./screenshots/4.png)
 
-`robots.txt` contains only the word "dale" — likely a username, worth
+`robots.txt` contains only the word "dale", likely a username, worth
 keeping in mind for later.
 
 ![robots.txt containing the username "dale"](./screenshots/5.png)
