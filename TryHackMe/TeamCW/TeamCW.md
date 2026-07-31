@@ -87,6 +87,9 @@ get New_site.txt
 
 printing the file will show us the following:
 
+![Setting up /etc/hosts](./screenshots/11.png)
+
+we're hinted to check out the subdomain dev.team.thm.
 
 but before that, make sure to add dev.team.thm into /etc/hosts, much like how we did earlier during setup.
 <p align="center">
