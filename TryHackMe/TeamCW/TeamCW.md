@@ -131,3 +131,4 @@ from the script.php?page=, we can find vital directories using another directory
 
 doing so will let you find ../../../etc/ssh/sshd_config, to be more specific, http://dev.team.thm/script.php?page=../../../etc/ssh/sshd_config. This will have an ssh key.
 
+![Contents of script.txt](./screenshots/13_.png)
