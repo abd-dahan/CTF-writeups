@@ -9,8 +9,8 @@
 This room simulates a small internal "team site" that leaks credentials
 through a forgotten backup file, then chains that access into SSH, sudo
 misuse, and a writable cron script to escalate to root. It's a good example
-of how a handful of small, individually "minor" misconfigurations — in this
-case, a forgotten `.old` file — can add up to a major impact, in this case
+of how a handful of small, individually "minor" misconfigurations, in this
+case, a forgotten `.old` file can add up to a major impact, in this case
 full root access. Every step in this chain would have left a distinct trail
 in logs, which I've noted throughout.
 
@@ -62,7 +62,7 @@ keeping in mind for later.
 
 ### 2. Fuzzing the scripts directory
 
-Of the directories found, `/scripts/` is the most interesting —
+Of the directories found, `/scripts/` is the most interesting 
 `/images/` and `/assets/` are unlikely to hold anything actionable. Fuzzing
 it directly:
 
@@ -77,7 +77,7 @@ Everything comes back 403 (blocked) except `script.txt`. Reading it:
 A comment in the file hints at a `script.old`. Requesting
 `http://team.thm/scripts/script.old` downloads the file, but it isn't
 directly viewable until renamed to `script.txt` locally. Once renamed, it
-turns out to be an older version of the script — this one including
+turns out to be an older version of the script, this one including
 credentials for an FTP account.
 
 ### 3. Accessing FTP
