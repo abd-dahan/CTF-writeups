@@ -89,8 +89,9 @@ printing the file will show us the following:
 
 ![Setting up /etc/hosts](./screenshots/11.png)
 
-we're hinted towards a subdomain, http://dev.team.thm/, which is what we'll be using recon for now.
+we're hinted towards a subdomain, [http://dev.team.thm/](http://dev.team.thm/), which is what we'll be using recon for now.
 
-but before that, make sure to add dev.team.thm into /etc/hosts, much like how we did earlier during setup
+but before that, make sure to add dev.team.thm into /etc/hosts, much like how we did earlier during setup.
+
 ![Setting up /etc/hosts](./screenshots/12.png)
-<sub>The IP is different from last time because this screenshot was taken at a separate day than the day of setup.</sub>
+*Note: the IP differs from the setup screenshot since this one was taken on a separate day.*
