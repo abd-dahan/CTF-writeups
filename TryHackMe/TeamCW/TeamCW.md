@@ -1,68 +1,89 @@
-
 # TryHackMe - Team
-Platform: Tryhackme
-Category: Web Enumeration / Credential exposure / Linux priviledge escalation
-Difficulty: Easy-Medium
+
+**Platform:** TryHackMe
+**Category:** Web Enumeration / Credential Exposure / Linux Privilege Escalation
+**Difficulty:** Easy-Medium
 
 ## Summary
 
-This room / CTF simulates a small internal "Team site" that leaks credentials through a forgotten backup file, then chains that access into SSH, sudo misuse, and a writable cron script to escalate to root. It's a good example of how a handful of small, individually "minor" misconfigurations (that being the forgotten .old file) can have a large impact in the end, and that being root access to admin. every step in this chain would have left a distinct trail in logs, which I've noted throughout.
+This room simulates a small internal "team site" that leaks credentials
+through a forgotten backup file, then chains that access into SSH, sudo
+misuse, and a writable cron script to escalate to root. It's a good example
+of how a handful of small, individually "minor" misconfigurations, in this
+case, a forgotten `.old` file can add up to a major impact, in this case
+full root access. Every step in this chain would have left a distinct trail
+in logs, which I've noted throughout.
 
-## Tools used
-dirsearch — initial directory enumeration
-ffuf — targeted fuzzing on the /scripts/ path
-ftp — retrieving files from an exposed FTP share
-Browser LFI (script.php?page=) — reading local files off the dev vhost
-ssh — authenticating with a recovered private key
-python3 pty.spawn — shell stabilization
-nc (netcat) — catching a reverse shell
-nano — editing the writable cron script
+## Tools Used
 
-## Objective 
-Enumerate a web application, recover leaked credentials, pivot across two vhosts, and escalate from an unprivileged user to root.
+- `dirsearch` — initial directory enumeration
+- `ffuf` — targeted fuzzing on the `/scripts/` path
+- `ftp` — retrieving files from an exposed FTP share
+- Browser LFI (`script.php?page=`) — reading local files off the dev vhost
+- `ssh` — authenticating with a recovered private key
+- `python3 pty.spawn` — shell stabilization
+- `nc` (netcat) — catching a reverse shell
+- `nano` — editing the writable cron script
+
+## Objective
+
+Enumerate a web application, recover leaked credentials, pivot across two
+vhosts, and escalate from an unprivileged user to root.
 
 ## Set-up
-if you're using the TryHackMe attack box, you can skip this section. Otherwise, to actually interact with the machine you're going to need to install openVPN from https://tryhackme.com/access and follow the steps to enable the VPN, secondly, you'll need to get the IP of the Lab machine and put it in your /etc/hosts file like the following:
+
+If you're using the TryHackMe AttackBox, you can skip this section.
+Otherwise, to interact with the machine you'll need to install OpenVPN from
+[tryhackme.com/access](https://tryhackme.com/access) and follow the steps to
+connect. Then, get the IP of the lab machine and add it to your
+`/etc/hosts` file:
 
 ![Setting up /etc/hosts](./screenshots/1.png)
-![Setting up /etc/hosts](./screenshots/2.png)
+![Confirming the host entry resolves](./screenshots/2.png)
 
 ## Process
+
 ### 1. Initial recon
 
-we start off by looking for directories inside of http://team.thm/, we do so by running the following command
+We start by looking for directories inside `http://team.thm/`:
 
 ```bash
 dirsearch -u http://team.thm/ -w Filenames_or_Directories_Common.wordlist -e php
 ```
 
-You'll get the following directories
+This turns up the following directories:
 
-![Setting up /etc/hosts](./screenshots/4.png)
+![dirsearch results showing /images, /assets, /scripts, and robots.txt](./screenshots/4.png)
 
-robots.txt has only "dale" in it, this is likely a username, so keep that name in mind
+`robots.txt` contains only the word "dale", likely a username, worth
+keeping in mind for later.
 
-![Setting up /etc/hosts](./screenshots/5.png)
+![robots.txt containing the username "dale"](./screenshots/5.png)
 
 ### 2. Fuzzing the scripts directory
 
-the other directories (assets and images) aren't as significant as scripts, so we can focus on that
-
-i ran the command
+Of the directories found, `/scripts/` is the most interesting 
+`/images/` and `/assets/` are unlikely to hold anything actionable. Fuzzing
+it directly:
 
 ```bash
 ffuf -u 'http://team.thm/scripts/FUZZ' -w Filenames_or_Directories_Common.wordlist -e .bak,.txt,.zip -mc 200,403
 ```
 
-and everything was 403 for the most part (aka private) except for script.txt, reading script.txt, we find
+Everything comes back 403 (blocked) except `script.txt`. Reading it:
 
-![Setting up /etc/hosts](./screenshots/7.png)
+![Contents of script.txt](./screenshots/7.png)
 
-the comment hints us to look for script.old, which if we try accessing http://team.thm/scripts/script.old, we'll have the file downloaded, however it cannot be viewed until we rename it to script.txt, and what we get is an older version of the script.txt file, this time including credentials for an ftp account.
+A comment in the file hints at a `script.old`. Requesting
+`http://team.thm/scripts/script.old` downloads the file, but it isn't
+directly viewable until renamed to `script.txt` locally. Once renamed, it
+turns out to be an older version of the script, this one including
+credentials for an FTP account.
 
 ### 3. Accessing FTP
 
-using the recently obtained credentials, run the following set of commands
+Using the recovered credentials:
+
 ```bash
 ftp
 open
@@ -71,29 +92,42 @@ team.thm
 [password]
 ```
 
-![Setting up /etc/hosts](./screenshots/9.png)
+![Logging into FTP](./screenshots/9.png)
 
-running it will let us access the ftp, however you must keep in mind that the directory in which you're running that set of commands matters, as you'll sometimes not be able to use "get" on the files you want.
+One thing to note: the directory you're running these commands from
+matters — if `get` doesn't work on a file you're trying to pull, try moving
+up a directory (`cd ..`) before reconnecting.
 
-### 4. Getting the file
+### 4. Retrieving the file
 
-inside of the FTP account, navigate around using ls and cd, you'll eventually find New_site.txt, download New_site.txt by running:
+Inside the FTP session, navigating with `ls` and `cd` eventually surfaces
+`New_site.txt`:
 
 ```bash
 get New_site.txt
 ```
 
-![Setting up /etc/hosts](./screenshots/10.png)
+![Downloading New_site.txt via FTP](./screenshots/10.png)
 
-printing the file will show us the following:
+Reading the file:
 
-![Setting up /etc/hosts](./screenshots/11.png)
+![Contents of New_site.txt](./screenshots/11.png)
 
-we're hinted to check out the subdomain dev.team.thm.
+It hints at a subdomain, `dev.team.thm`, which is where we'll focus recon
+next. Before visiting it, add it to `/etc/hosts` the same way as during
+setup:
 
-but before that, make sure to add dev.team.thm into /etc/hosts, much like how we did earlier during setup.
 <p align="center">
-  <img src="./screenshots/12.png" alt="Setting up /etc/hosts">
+  <img src="./screenshots/12.png" alt="Adding dev.team.thm to /etc/hosts">
   <br>
-  <em>The IP is different from last time because this screenshot was taken on a separate day than the day of setup.</em>
+  <em>The IP differs from the setup screenshot since this one was taken on a separate day.</em>
 </p>
+
+### dev subdomain
+
+Inside dev.team.thm, we find a placeholder link for a teamshare, and the url will be http://dev.team.thm/script.php?page=teamshare.php
+
+from the script.php?page=, we can find vital directories using another directory search after the '=', this time use a wordlist that is more relevant to LFI.
+
+doing so will let you find ../../../etc/ssh/sshd_config, to be more specific, http://dev.team.thm/script.php?page=../../../etc/ssh/sshd_config. This will have an ssh key.
+
