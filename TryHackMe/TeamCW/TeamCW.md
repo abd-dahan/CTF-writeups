@@ -140,3 +140,15 @@ make a file with the key starting from the BEGIN OPENSSH PRIVATE KEY line down t
 the file's contents should look like this 
 
 ![Contents of script.txt](./screenshots/14_.png)
+
+### SSH connection
+
+now, while keeping in mind of which directory you're running the command the following command
+
+```bash
+ssh -i [SSH File name] dale@team.thm
+```
+
+you'll get access to dale's files, which when you navigate, you'll find your first flag.
+
+![Contents of script.txt](./screenshots/16.png)
